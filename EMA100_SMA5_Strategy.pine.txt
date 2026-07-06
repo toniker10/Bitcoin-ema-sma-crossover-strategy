@@ -1,4 +1,4 @@
-﻿//@version=6
+//@version=6
 strategy(title="Bitcoin Crossover", shorttitle="EMA100x5", overlay=true, initial_capital=100, default_qty_type=strategy.cash, default_qty_value=100, commission_type=strategy.commission.percent, commission_value=0.1, calc_on_every_tick=false, process_orders_on_close=false, margin_long=0, margin_short=0)
 fastLen = input.int(100, "EMA Period (Fast)", minval=1)
 slowLen = input.int(5, "SMA Period (Slow)", minval=1)
