@@ -1,0 +1,51 @@
+﻿//@version=6
+strategy(title="Bitcoin Crossover", shorttitle="EMA100x5", overlay=true, initial_capital=100, default_qty_type=strategy.cash, default_qty_value=100, commission_type=strategy.commission.percent, commission_value=0.1, calc_on_every_tick=false, process_orders_on_close=false, margin_long=0, margin_short=0)
+fastLen = input.int(100, "EMA Period (Fast)", minval=1)
+slowLen = input.int(5, "SMA Period (Slow)", minval=1)
+slPct = input.float(8.0, "Stop Loss %", minval=0.1, step=0.5) / 100
+tpPct = input.float(56.0, "Take Profit %", minval=1.0, step=5.0) / 100
+fastMA = ta.ema(close, fastLen)
+slowMA = ta.sma(close, slowLen)
+plot(fastMA, "EMA Fast", color=color.new(color.orange, 0), linewidth=2)
+plot(slowMA, "SMA Slow", color=color.new(color.blue, 0), linewidth=2)
+goldenCross = ta.crossover(slowMA, fastMA)
+if goldenCross
+    strategy.entry("Long", strategy.long)
+if strategy.position_size > 0
+    entryP = strategy.position_avg_price
+    strategy.exit("SL/TP", from_entry="Long", stop=entryP * (1 - slPct), limit=entryP * (1 + tpPct), comment_loss="Stop Loss", comment_profit="Take Profit")
+if strategy.position_size == 0 and strategy.position_size[1] > 0
+    tradeIdx = strategy.closedtrades - 1
+    tradeProfit = strategy.closedtrades.profit(tradeIdx)
+    labelTxt = (tradeProfit >= 0 ? "WIN +" : "LOSS ") + str.tostring(tradeProfit, "#.##") + " EUR"
+    label.new(bar_index, high, labelTxt, style=label.style_label_down, color=tradeProfit >= 0 ? color.new(color.green, 0) : color.new(color.red, 0), textcolor=color.white, size=size.small)
+var table t = table.new(position.top_right, 2, 11, bgcolor=color.new(color.black, 80), border_width=1)
+if barstate.islast
+    table.cell(t, 0, 0, "Strategy", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 0, "EMA100/SMA5", text_color=color.white, text_size=size.small)
+    table.cell(t, 0, 1, "Stop Loss", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 1, "8%", text_color=color.white, text_size=size.small)
+    table.cell(t, 0, 2, "Take Profit", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 2, "56%", text_color=color.white, text_size=size.small)
+    table.cell(t, 0, 3, "Commission", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 3, "0.1%/side", text_color=color.white, text_size=size.small)
+    table.cell(t, 0, 4, "Timeframe", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 4, "Daily (1D)", text_color=color.white, text_size=size.small)
+    netPnl = strategy.netprofit / strategy.initial_capital * 100
+    table.cell(t, 0, 5, "Net Profit", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 5, str.tostring(netPnl, "#.##") + "%", text_color=color.white, text_size=size.small)
+    finalCapital = strategy.initial_capital + strategy.netprofit
+    table.cell(t, 0, 6, "Final Capital", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 6, str.tostring(finalCapital, "#.##") + " EUR", text_color=color.white, text_size=size.small)
+    totalTrades = strategy.closedtrades
+    winTrades = strategy.wintrades
+    lossTrades = strategy.losstrades
+    winRate = totalTrades > 0 ? winTrades / totalTrades * 100 : 0
+    table.cell(t, 0, 7, "Total Trades", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 7, str.tostring(totalTrades), text_color=color.white, text_size=size.small)
+    table.cell(t, 0, 8, "Win Trades", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 8, str.tostring(winTrades), text_color=color.white, text_size=size.small)
+    table.cell(t, 0, 9, "Loss Trades", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 9, str.tostring(lossTrades), text_color=color.white, text_size=size.small)
+    table.cell(t, 0, 10, "Win Rate", text_color=color.gray, text_size=size.small)
+    table.cell(t, 1, 10, str.tostring(winRate, "#.##") + "%", text_color=color.white, text_size=size.small)
